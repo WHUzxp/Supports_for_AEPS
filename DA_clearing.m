@@ -1,0 +1,93 @@
+%%%根据报价实际出清，并尽可能保证追踪期望计划%%%
+%%%通过将市场出清问题转化为KKT条件，并利用驻点法完成%%%
+clear
+clc
+load Bid_DA_final
+%决策变量
+pi_DA=Bid_price;%投标价格
+Pg=sdpvar(10,96);%发电商分段电量
+Pf=sdpvar(7,96);%馈线功率
+Pch=sdpvar(4,96);%各充电站出清充电电量
+Pdis=sdpvar(4,96);%各充电站出清放电电量
+Lagrant_balance=sdpvar(7,96);%功率平衡约束的拉格朗日乘子
+DLMP=Lagrant_balance/0.25;%配电网节点边际电价
+Lagrant_G=sdpvar(1,96);%平衡节点拉格朗日乘子
+Lagrant_G_left=sdpvar(10,96);%发电商电量下界
+Lagrant_G_right=sdpvar(10,96);%发电商电量上界
+b_Lagrant_G_left=binvar(10,96);%发电商电量下界布尔变量
+b_Lagrant_G_right=binvar(10,96);%发电商电量上界布尔变量
+Lagrant_L_left=sdpvar(7,96);%线路功率下界
+Lagrant_L_right=sdpvar(7,96);%线路功率上界
+b_Lagrant_L_left=binvar(7,96);%线路功率上界布尔变量
+b_Lagrant_L_right=binvar(7,96);%线路功率下界布尔变量
+Lagrant_ch_left=sdpvar(4,96);%充电站充电功率下界
+Lagrant_ch_right=sdpvar(4,96);%充电站充电功率上界
+b_Lagrant_ch_left=binvar(4,96);%充电站充电功率下界布尔变量
+b_Lagrant_ch_right=binvar(4,96);%充电站充电功率上界布尔变量
+Lagrant_dis_left=sdpvar(4,96);%充电站放电功率下界
+Lagrant_dis_right=sdpvar(4,96);%充电站放电功率上界
+b_Lagrant_dis_left=binvar(4,96);%充电站放电功率下界布尔变量
+b_Lagrant_dis_right=binvar(4,96);%充电站放电功率上界布尔变量
+%基本参数
+Link=zeros(24,96);%时段换算矩阵(日前1h换算为实时15min)
+for i=1:24
+    Link(i,4*i-3:4*i)=1;
+end
+Loadcurve=[0.955391944564747,0.978345604157644,1,0.995019488956258,0.972932005197055,0.970333477695972,0.930489389346037,0.890428757037679,0.902771762667822,0.941966219142486,0.911000433087917,0.862061498484192,0.840190558683413,0.831095712429623,0.756604590731919,0.671719359029883,0.611520138588133,0.582936336076224,0.572542226071893,0.574707665656128,0.587267215244695,0.644218276310091,0.755521870939801,0.884798614118666];
+Loadcurve=Loadcurve*Link;%换成96个时段
+PL_base=[5.704;5.705;5.631;6.518;4.890;5.705;5.847]*1000;%负荷分布
+PL=PL_base*Loadcurve;%基础负荷(负荷曲线从08:00开始算起，即第9个时段)
+Pf_limit=1000*[40,40,40,40,40,40,40]';%馈线功率限制
+Pg_step=1000*[20,5,3,2,2,2,2,2,2,100]';%报价区间
+Price_DSO=[3:12]'*0.1;%分段电价
+load data_potential_DA
+Pchmax=[Forecast_CS1(1,1:96);Forecast_CS2(1,1:96);Forecast_CS3(1,1:96);Forecast_CS4(1,1:96)];%充电站充电报量上限
+Pdismax=[Forecast_CS1(2,1:96);Forecast_CS2(2,1:96);Forecast_CS3(2,1:96);Forecast_CS4(2,1:96)];%充电站放电报量上限
+Smin=[Forecast_CS1(3,1:96);Forecast_CS2(3,1:96);Forecast_CS3(3,1:96);Forecast_CS4(3,1:96)];%充电站电量下限;
+Smax=[Forecast_CS1(4,1:96);Forecast_CS2(4,1:96);Forecast_CS3(4,1:96);Forecast_CS4(4,1:96)];%充电站电量上限;
+deltaS=[Forecast_CS1(5,1:96);Forecast_CS2(5,1:96);Forecast_CS3(5,1:96);Forecast_CS4(5,1:96)];%充电站电量变化量;
+lastS=[Forecast_CS1(5,97);Forecast_CS2(5,97);Forecast_CS3(5,97);Forecast_CS4(5,97)];%第96个时段必须完成的充电量
+%KKT条件
+Ckkt=[];
+Ckkt=[Ckkt,Price_DSO*ones(1,96)*0.25-Lagrant_G_left+Lagrant_G_right-ones(10,1)*Lagrant_G==0,
+    -Lagrant_balance-Lagrant_L_left+Lagrant_L_right+ones(7,1)*Lagrant_G==0,
+    -pi_DA*0.25+Lagrant_balance([1,4,5,7],:)-Lagrant_ch_left+Lagrant_ch_right==0,
+    pi_DA*0.25-Lagrant_balance([1,4,5,7],:)-Lagrant_dis_left+Lagrant_dis_right==0];%KKT平衡条件
+Ckkt=[Ckkt,sum(Pg)==sum(Pf),
+    Pf(1,:)==PL(1,:)+Pch(1,:)-Pdis(1,:),
+    Pf(2,:)==PL(2,:),
+    Pf(3,:)==PL(3,:),
+    Pf(4,:)==PL(4,:)+Pch(2,:)-Pdis(2,:),
+    Pf(5,:)==PL(5,:)+Pch(3,:)-Pdis(3,:),
+    Pf(6,:)==PL(6,:),
+    Pf(7,:)==PL(7,:)+Pch(4,:)-Pdis(4,:)];%等式约束原始条件
+Ckkt=[Ckkt,0<=Pf_limit*ones(1,96)+Pf<=1E6*b_Lagrant_L_left,
+    0<=Lagrant_L_left<=1E6*(1-b_Lagrant_L_left),
+    0<=Pf_limit*ones(1,96)-Pf<=1E6*b_Lagrant_L_right,
+    0<=Lagrant_L_right<=1E6*(1-b_Lagrant_L_right),
+    0<=Pg<=1E6*b_Lagrant_G_left,
+    0<=Lagrant_G_left<=1E6*(1-b_Lagrant_G_left),
+    0<=Pg_step*ones(1,96)-Pg<=1E6*b_Lagrant_G_right,
+    0<=Lagrant_G_right<=1E6*(1-b_Lagrant_G_right),
+    0<=Pch<=1E6*b_Lagrant_ch_left,
+    0<=Lagrant_ch_left<=1E6*(1-b_Lagrant_ch_left),
+    0<=Pchmax-Pch<=1E6*b_Lagrant_ch_right,
+    0<=Lagrant_ch_right<=1E6*(1-b_Lagrant_ch_right),
+    0<=Pdis<=1E6*b_Lagrant_dis_left,
+    0<=Lagrant_dis_left<=1E6*(1-b_Lagrant_dis_left),
+    0<=Pdismax-Pdis<=1E6*b_Lagrant_dis_right,
+    0<=Lagrant_dis_right<=1E6*(1-b_Lagrant_dis_right)];%互补条件
+temp1=sdpvar(4,96);temp2=sdpvar(4,96);%临时变量，为了加快二次建模速度
+X=binvar(4,96);Y=binvar(4,96);%引入布尔变量避免同时充放电
+load Bid_DA_final
+C_temp=[temp1==Pch_expect-Pch,temp2==Pdis_expect-Pdis,0<=Pch<=Pchmax.*X,0<=Pdis<=Pdismax.*Y,X+Y<=1];
+%目标函数
+Obj=sum(sum(temp1.^2+temp2.^2));%与日前期望值偏差最小
+%约束条件
+Constraints=[Ckkt,C_temp];
+%求解模型
+ops=sdpsettings('solver','gurobi','gurobi.OptimalityTol',1e-8,'gurobi.FeasibilityTol',1e-8,'gurobi.IntFeasTol',1e-8);
+ops.gurobi.MIPGap=1e-8;
+solvesdp(Constraints,Obj,ops);
+Pch_DA_clearing=double(Pch);Pdis_DA_clearing=double(Pdis);DLMP_DA_clearing=double(DLMP);Pf_DA_clearing=double(Pf);
+save('result_DA_clearing','Pch_DA_clearing','Pdis_DA_clearing','DLMP_DA_clearing','Pf_DA_clearing');%参考报价
