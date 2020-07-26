@@ -1,0 +1,32 @@
+%%%集中调度模式%%%
+%%%实时，按节点边际电价结算%%%
+clear
+clc
+%固定参数
+load result_DA_center
+Pg_DA=sum(result_DA_center.Pg);%日前发电量
+Price_G_DA=result_DA_center.Price_G;%日前发电价格
+Price_balance=0.1;%平衡价格
+Pch_last=zeros(4,96);%之前的充电调度决策(首次使用)
+Pdis_last=zeros(4,96);%之前的放电调度决策(首次使用)
+Pg_RT=zeros(1,96);
+Price_G_RT=zeros(1,96);%现货系统边际电价
+Price_DLMP=zeros(7,96);%现货节点边际电价
+Pch_DA=result_DA_center.Pch;%日前充电计划
+Pdis_DA=result_DA_center.Pdis;%日前放电计划
+%滚动计算
+for l=1:96;%调度窗
+    result_RT_center_temp=RT_center_Callback(l,Pch_last,Pdis_last,Pg_DA,Price_G_DA,Price_balance);
+    Pch_last(:,l)=result_RT_center_temp.Pch(:,l);%更新充电功率
+    Pdis_last(:,l)=result_RT_center_temp.Pdis(:,l);%更新放电功率
+    Pg_RT(l)=result_RT_center_temp.Pg(l);%发电商实际功率
+    Price_G_RT(l)=result_RT_center_temp.Price_G(l);%系统边际电价
+    Price_DLMP(:,l)=result_RT_center_temp.DLMP(l);%节点边际电价
+end
+result_RT_center.Pch=result_RT_center_temp.Pch;
+result_RT_center.Pdis=result_RT_center_temp.Pdis;
+result_RT_center.S=result_RT_center_temp.S;
+result_RT_center.DLMP=Price_DLMP;
+result_RT_center.Gprice=Price_G_RT;
+result_RT_center.Pg=Pg_RT;
+save('result_RT_center','result_RT_center');

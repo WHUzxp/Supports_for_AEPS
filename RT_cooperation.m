@@ -1,0 +1,26 @@
+%%%通过合作方式最优竞标%%%
+%%%实时%%%
+clear
+clc
+%固定参数
+Pch_last=zeros(4,96);%之前的充电调度决策(首次使用)
+Pdis_last=zeros(4,96);%之前的放电调度决策(首次使用)
+Price_balance=0.1;%平衡价格
+%滚动计算
+Price_G_RT=zeros(1,96);
+Price_DLMP=zeros(7,96);
+delta_Pg=zeros(1,96);
+for l=1:96
+    result_RT_cooperation_temp=RT_cooperation_Callback(l,Pch_last,Pdis_last,Price_balance);
+    Pch_last(:,l)=result_RT_cooperation_temp.Pch(:,l);%更新充电功率
+    Pdis_last(:,l)=result_RT_cooperation_temp.Pdis(:,l);%更新放电功率
+    Price_G_RT(l)=result_RT_cooperation_temp.price_G;%系统边际电价
+    Price_DLMP(:,l)=result_RT_cooperation_temp.DLMP;%节点边际电价
+    delta_Pg(l)=result_RT_cooperation_temp.delta_Pg;
+end
+result_RT_cooperation.Pch=Pch_last;
+result_RT_cooperation.Pdis=Pdis_last;
+result_RT_cooperation.Price_G_RT=Price_G_RT;
+result_RT_cooperation.Price_DLMP=Price_DLMP;
+result_RT_cooperation.delta_Pg=delta_Pg;
+save('result_RT_cooperation','result_RT_cooperation');

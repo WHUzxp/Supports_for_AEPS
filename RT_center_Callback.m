@@ -1,0 +1,59 @@
+%%%实时集中调度模式函数%%%
+function result_RT_center=RT_center_Callback(l,Pch_last,Pdis_last,Pg_DA,Price_G_DA,Price_balance)
+%决策变量
+S=sdpvar(4,96);%广义储能设备电量
+Pg=sdpvar(1,96);%发电商现货电量
+Pf=sdpvar(7,96);%馈线功率
+Pch=sdpvar(4,96);%各充电站出清充电电量
+Pch(:,1:l-1)=Pch_last(:,1:l-1);%复原之前的充电状态
+Pdis=sdpvar(4,96);%各充电站出清放电电量
+Pdis(:,1:l-1)=Pdis_last(:,1:l-1);%复原之前的放电状态
+%基本参数
+load data_potential_RT
+Link=zeros(24,96);%时段换算矩阵(日前1h换算为实时15min)
+for i=1:24
+    Link(i,4*i-3:4*i)=1;
+end
+Loadcurve=[0.955391944564747,0.978345604157644,1,0.995019488956258,0.972932005197055,0.970333477695972,0.930489389346037,0.890428757037679,0.902771762667822,0.941966219142486,0.911000433087917,0.862061498484192,0.840190558683413,0.831095712429623,0.756604590731919,0.671719359029883,0.611520138588133,0.582936336076224,0.572542226071893,0.574707665656128,0.587267215244695,0.644218276310091,0.755521870939801,0.884798614118666];
+Loadcurve=Loadcurve*Link;%换成96个时段
+PL_base=[5.704;5.705;5.631;6.518;4.890;5.705;5.847]*1000;%负荷分布
+PL=PL_base*Loadcurve;%基础负荷(负荷曲线从08:00开始算起，即第9个时段)
+Pf_limit=1000*[40,40,40,40,40,40,40]';%馈线功率限制
+Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%充电站充电报量上限
+Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%充电站放电报量上限
+Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%充电站电量下限;
+Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%充电站电量上限;
+deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%充电站电量变化量;
+lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%第96个时段必须完成的充电量
+%约束条件
+C_G=[Pg==sum(Pf)];%发电量约束
+C_DLMP=[Pf(1,:)==PL(1,:)+Pch(1,l)-Pdis(1,l),
+    Pf(2,:)==PL(2,:),
+    Pf(3,:)==PL(3,:),
+    Pf(4,:)==PL(4,:)+Pch(2,:)-Pdis(2,:),
+    Pf(5,:)==PL(5,:)+Pch(3,:)-Pdis(3,:),
+    Pf(6,:)==PL(6,:),
+    Pf(7,:)==PL(7,:)+Pch(4,:)-Pdis(4,:)];%节点功率平衡约束
+C_CS=[0<=Pch<=Pchmax,0<=Pdis<=Pdismax,Smin<=S<=Smax,S(:,1)==0.25*0.95*Pch(:,1)-0.25*Pdis(:,1)/0.95+deltaS(:,1),
+    S(:,2:96)==S(:,1:95)+0.25*0.95*Pch(:,2:96)-0.25*Pdis(:,2:96)/0.95+deltaS(:,2:96),
+    0==S(:,96)+lastS];%充电站约束
+C_bound=[-Pf_limit*ones(1,96)<=Pf<=Pf_limit*ones(1,96),0<=Pg<=inf];%边界约束
+Constraints=[C_G,C_DLMP,C_CS,C_bound];
+%目标函数
+Obj=0.25*sum(Price_G_DA.*Pg)+0.25*Price_balance*abs(Pg(l)-Pg_DA(l));
+%求解模型
+ops=sdpsettings('solver','gurobi','gurobi.OptimalityTol',1e-8,'gurobi.FeasibilityTol',1e-8,'gurobi.IntFeasTol',1e-8);
+ops.gurobi.MIPGap=1e-8;
+solvesdp(Constraints,Obj,ops);
+%得到变量
+result_RT_center.Pch=double(Pch);
+result_RT_center.Pg=double(Pg);
+Pg=double(Pg);
+isPg=(Pg-Pg_DA)>0;%为了计算出清电价，计算发电机分段选择情况
+result_RT_center.Price_G=Price_G_DA+Price_balance*isPg;%系统边际电价
+isPg=(Pg-Pg_DA)<0;%为了计算出清电价，计算发电机分段选择情况
+result_RT_center.Price_G=result_RT_center.Price_G-Price_balance*isPg;%系统边际电价
+result_RT_center.Pdis=double(Pdis);
+result_RT_center.S=double(S);
+result_RT_center.DLMP=ones(7,1)*result_RT_center.Price_G;%无阻赛场景简单计算
+end

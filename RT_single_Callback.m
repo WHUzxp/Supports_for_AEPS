@@ -1,0 +1,106 @@
+%%%独立投标函数%%%
+%%%实时%%%
+function result_RT_single=RT_single_Callback(l,Set_CS_bid,Pch_last,Pdis_last,price_balance)
+load data_potential_DA
+load result_DA_clearing
+price_balance=0.1;%平衡电价
+Pch_DA=Pch_DA_clearing;%日前充电决策
+Pdis_DA=Pdis_DA_clearing;%日前放电决策
+Pf_DA=Pf_DA_clearing;%日前馈线功率
+Set_CS_nobid=setdiff([1,2,3,4],Set_CS_bid);%其余充电站
+%决策变量
+S=sdpvar(1,96);%广义储能设备电量
+delta_Pg=sdpvar;%发电商差量
+delta_Pf=sdpvar(7,1);%馈线功率差量
+Pch=sdpvar(4,96);%实际充电电量
+Pch(Set_CS_nobid,:)=Pch_last(Set_CS_nobid,:);%其他充电站的充电决策
+Pch(Set_CS_bid,1:l-1)=Pch_last(Set_CS_bid,1:l-1);%赋初值
+Pdis=sdpvar(4,96);%实际放电电量
+Pdis(Set_CS_nobid,:)=Pdis_last(Set_CS_nobid,:);%其他充电站的放电决策
+Pdis(Set_CS_bid,1:l-1)=Pdis_last(Set_CS_bid,1:l-1);%赋初值
+delta_Pch=sdpvar(4,96);%出清充电差量
+delta_Pch(Set_CS_nobid,:)=Pch_last(Set_CS_nobid,:)-Pch_DA(Set_CS_nobid,:);
+delta_Pdis=sdpvar(4,96);%出清放电差量
+delta_Pdis(Set_CS_nobid,:)=Pdis_last(Set_CS_nobid,:)-Pdis_DA(Set_CS_nobid,:);
+Beta=sdpvar;%功率差量
+Lagrant_balance=sdpvar(7,1);%功率平衡约束的拉格朗日乘子
+DLMP=Lagrant_balance/0.25;%配电网节点边际电价
+Lagrant_G=sdpvar(1,1);%平衡节点拉格朗日乘子
+Lagrant_G_left=sdpvar(1,1);%发电商电量下界
+Lagrant_G_right=sdpvar(1,1);%发电商电量上界
+b_Lagrant_G_left=binvar(1,1);%发电商电量下界布尔变量
+b_Lagrant_G_right=binvar(1,1);%发电商电量上界布尔变量
+Lagrant_L_left=sdpvar(7,1);%线路功率下界
+Lagrant_L_right=sdpvar(7,1);%线路功率上界
+b_Lagrant_L_left=binvar(7,1);%线路功率上界布尔变量
+b_Lagrant_L_right=binvar(7,1);%线路功率下界布尔变量
+Lagrant_beta_in=sdpvar(1,1);%增发功率拉格朗日乘子
+b_Lagrant_beta_in=binvar(1,1);%增发功率布尔变量
+Lagrant_beta_de=sdpvar(1,1);%减发功率拉格朗日乘子
+b_Lagrant_beta_de=binvar(1,1);%减发功率布尔变量
+Lagrant_beta_eq=sdpvar(1,1);%功率无变化拉格朗日乘子
+b_Lagrant_beta_eq=binvar(1,1);%功率无变化布尔变量
+%基本参数
+load Bid_reference
+Price_G_DA=pi_DA_reference(1,:);%日前节点边际电价
+Pf_limit=1000*[40,40,40,40,40,40,40]';%馈线功率限制
+load data_potential_RT
+Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%充电站充电报量上限
+Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%充电站放电报量上限
+Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%充电站电量下限;
+Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%充电站电量上限;
+deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%充电站电量变化量;
+lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%第96个时段必须完成的充电量
+%KKT条件
+Ckkt=[];
+Ckkt=[Ckkt,Price_G_DA(l)*0.25-Lagrant_G-Lagrant_G_left+Lagrant_G_right+Lagrant_beta_in-Lagrant_beta_de==0,
+    -Lagrant_balance-Lagrant_L_left+Lagrant_L_right+ones(7,1)*Lagrant_G==0,
+    price_balance*0.25-Lagrant_beta_in-Lagrant_beta_de-Lagrant_beta_eq==0];%KKT平衡条件
+Ckkt=[Ckkt,delta_Pg==sum(delta_Pf),
+    delta_Pf(1)==delta_Pch(1,l)-delta_Pdis(1,l),
+    delta_Pf(2)==0,
+    delta_Pf(3)==0,
+    delta_Pf(4)==delta_Pch(2,l)-delta_Pdis(2,l),
+    delta_Pf(5)==delta_Pch(3,l)-delta_Pdis(3,l),
+    delta_Pf(6)==0,
+    delta_Pf(7)==delta_Pch(4,l)-delta_Pdis(4,l)];%等式约束原始条件
+Ckkt=[Ckkt,0<=Pf_limit+delta_Pf+Pf_DA(:,l)<=1E6*b_Lagrant_L_left,
+    0<=Lagrant_L_left<=1*(1-b_Lagrant_L_left),
+    0<=Pf_limit-delta_Pf-Pf_DA(:,l)<=1E6*b_Lagrant_L_right,
+    0<=Lagrant_L_right<=1*(1-b_Lagrant_L_right),
+    0<=delta_Pg+1E5<=1E6*b_Lagrant_G_left,
+    0<=Lagrant_G_left<=1*(1-b_Lagrant_G_left),
+    0<=1E5-delta_Pg<=1E6*b_Lagrant_G_right,
+    0<=Lagrant_G_right<=1*(1-b_Lagrant_G_right),
+    -1E5*(1-b_Lagrant_beta_in)<=Beta-delta_Pg<=1E5*(1-b_Lagrant_beta_in),
+    0<=Lagrant_beta_in<=0.1*b_Lagrant_beta_in,
+    -1E5*(1-b_Lagrant_beta_de)<=Beta+delta_Pg<=1E5*(1-b_Lagrant_beta_de),
+    0<=Lagrant_beta_de<=0.1*b_Lagrant_beta_de,
+    -1E5*b_Lagrant_beta_de<=delta_Pg<=1E5*b_Lagrant_beta_in,
+    0.001-1E5*(1-b_Lagrant_beta_in)<=delta_Pg<=-0.001+1E5*(1-b_Lagrant_beta_de),
+    0<=Lagrant_beta_eq<=0.1*b_Lagrant_beta_eq,
+    b_Lagrant_beta_in+b_Lagrant_beta_de+b_Lagrant_beta_eq==1,
+    Beta>=0];%互补条件
+%原始条件
+Cpri=[];
+Cpri=[Cpri,0<=Pch(Set_CS_bid,:)<=Pchmax(Set_CS_bid,:),0<=Pdis(Set_CS_bid,:)<=Pdismax(Set_CS_bid,:),Smin(Set_CS_bid,:)<=S<=Smax(Set_CS_bid,:),S(1)==0.25*0.95*Pch(Set_CS_bid,1)-0.25*Pdis(Set_CS_bid,1)/0.95+deltaS(Set_CS_bid,1),
+    S(2:96)==S(1:95)+0.25*0.95*Pch(Set_CS_bid,2:96)-0.25*Pdis(Set_CS_bid,2:96)/0.95+deltaS(Set_CS_bid,2:96),
+    0==S(96)+lastS(Set_CS_bid),Pch==Pch_DA+delta_Pch,Pdis==Pdis_DA+delta_Pdis];%电量约束
+%目标函数
+Obj=0.25*sum(sum((ones(4,1)*Price_G_DA(l+1:96)).*(delta_Pch(:,l+1:96)-delta_Pdis(:,l+1:96))))+0.25*Price_G_DA(l)*delta_Pg+0.25*price_balance*Beta-1E5*Lagrant_G_left+1E5*Lagrant_G_right+sum(Lagrant_L_left.*(Pf_limit+Pf_DA(:,l)))+sum(Lagrant_L_right.*(Pf_limit-Pf_DA(:,l)))-Lagrant_G*sum(delta_Pch(Set_CS_nobid,l)-delta_Pdis(Set_CS_nobid,l));
+%约束条件
+Constraints=[Ckkt,Cpri];
+%求解模型
+ops=sdpsettings('solver','gurobi','gurobi.OptimalityTol',1e-8,'gurobi.FeasibilityTol',1e-8,'gurobi.IntFeasTol',1e-8);
+ops.gurobi.MIPGap=1e-8;
+solvesdp(Constraints,Obj,ops);
+%得到变量
+result_RT_single.Pch=double(Pch);
+result_RT_single.Pdis=double(Pdis);
+result_RT_single.delta_Pch=double(delta_Pch);
+result_RT_single.delta_Pdis=double(delta_Pdis);
+result_RT_single.S=double(S);
+result_RT_single.price_G=double(Lagrant_G);
+result_RT_single.DLMP=double(DLMP);
+result_RT_single.delta_Pg=double(delta_Pg);
+end
