@@ -1,72 +1,72 @@
-%%%ÈÕÇ°ÎŞĞò³äµç¹¦ÂÊ(ÓÅÏÈ³äµçÔ­Ôò)%%%
+%%%æ—¥å‰æ— åºå……ç”µåŠŸç‡(ä¼˜å…ˆå……ç”µåŸåˆ™)%%%
 clear
 clc
 load data_potential_DA
-%³äµçÕ¾1
-Pch_CS1_disorder=sdpvar(1,97);%³äµç
-Pdis_CS1_disorder=zeros(1,97);%·Åµç
+%å……ç”µç«™1
+Pch_CS1_disorder=sdpvar(1,97);%å……ç”µ
+Pdis_CS1_disorder=zeros(1,97);%æ”¾ç”µ
 S_CS1_disorder=sdpvar(1,97);%SOC
-f_CS1_disorder=Pch_CS1_disorder*[1:97]';%ÓÅÏÈ³äµçÔ­ÔòÄ¿±êº¯Êı
+f_CS1_disorder=Pch_CS1_disorder*[1:97]';%ä¼˜å…ˆå……ç”µåŸåˆ™ç›®æ ‡å‡½æ•°
 C_CS1_disorder=[0<=Pch_CS1_disorder<=Forecast_CS1(1,:),
     Forecast_CS1(3,:)<=S_CS1_disorder<=Forecast_CS1(4,:),
     S_CS1_disorder(1)==0.25*0.95*Pch_CS1_disorder(1)+Forecast_CS1(5,1),
-    S_CS1_disorder(2:97)==S_CS1_disorder(1:96)+0.25*0.95*Pch_CS1_disorder(2:97)+Forecast_CS1(5,2:97)];%Ô¼ÊøÌõ¼ş
+    S_CS1_disorder(2:97)==S_CS1_disorder(1:96)+0.25*0.95*Pch_CS1_disorder(2:97)+Forecast_CS1(5,2:97)];%çº¦æŸæ¡ä»¶
 solvesdp(C_CS1_disorder,f_CS1_disorder);
 Pch_CS1_disorder=double(Pch_CS1_disorder);
 S_CS1_disorder=double(S_CS1_disorder);
-%³äµçÕ¾2
-Pch_CS2_disorder=sdpvar(1,97);%³äµç
-Pdis_CS2_disorder=zeros(1,97);%·Åµç
+%å……ç”µç«™2
+Pch_CS2_disorder=sdpvar(1,97);%å……ç”µ
+Pdis_CS2_disorder=zeros(1,97);%æ”¾ç”µ
 S_CS2_disorder=sdpvar(1,97);%SOC
-f_CS2_disorder=Pch_CS2_disorder*[1:97]';%ÓÅÏÈ³äµçÔ­ÔòÄ¿±êº¯Êı
+f_CS2_disorder=Pch_CS2_disorder*[1:97]';%ä¼˜å…ˆå……ç”µåŸåˆ™ç›®æ ‡å‡½æ•°
 C_CS2_disorder=[0<=Pch_CS2_disorder<=Forecast_CS2(1,:),
     Forecast_CS2(3,:)<=S_CS2_disorder<=Forecast_CS2(4,:),
     S_CS2_disorder(1)==0.25*0.95*Pch_CS2_disorder(1)+Forecast_CS2(5,1),
-    S_CS2_disorder(2:97)==S_CS2_disorder(1:96)+0.25*0.95*Pch_CS2_disorder(2:97)+Forecast_CS2(5,2:97)];%Ô¼ÊøÌõ¼ş
+    S_CS2_disorder(2:97)==S_CS2_disorder(1:96)+0.25*0.95*Pch_CS2_disorder(2:97)+Forecast_CS2(5,2:97)];%çº¦æŸæ¡ä»¶
 solvesdp(C_CS2_disorder,f_CS2_disorder);
 Pch_CS2_disorder=double(Pch_CS2_disorder);
 S_CS2_disorder=double(S_CS2_disorder);
-%³äµçÕ¾3
-Pch_CS3_disorder=sdpvar(1,97);%³äµç
-Pdis_CS3_disorder=zeros(1,97);%·Åµç
+%å……ç”µç«™3
+Pch_CS3_disorder=sdpvar(1,97);%å……ç”µ
+Pdis_CS3_disorder=zeros(1,97);%æ”¾ç”µ
 S_CS3_disorder=sdpvar(1,97);%SOC
-f_CS3_disorder=Pch_CS3_disorder*[1:97]';%ÓÅÏÈ³äµçÔ­ÔòÄ¿±êº¯Êı
+f_CS3_disorder=Pch_CS3_disorder*[1:97]';%ä¼˜å…ˆå……ç”µåŸåˆ™ç›®æ ‡å‡½æ•°
 C_CS3_disorder=[0<=Pch_CS3_disorder<=Forecast_CS3(1,:),
     Forecast_CS3(3,:)<=S_CS3_disorder<=Forecast_CS3(4,:),
     S_CS3_disorder(1)==0.25*0.95*Pch_CS3_disorder(1)+Forecast_CS3(5,1),
-    S_CS3_disorder(2:97)==S_CS3_disorder(1:96)+0.25*0.95*Pch_CS3_disorder(2:97)+Forecast_CS3(5,2:97)];%Ô¼ÊøÌõ¼ş
+    S_CS3_disorder(2:97)==S_CS3_disorder(1:96)+0.25*0.95*Pch_CS3_disorder(2:97)+Forecast_CS3(5,2:97)];%çº¦æŸæ¡ä»¶
 solvesdp(C_CS3_disorder,f_CS3_disorder);
 Pch_CS3_disorder=double(Pch_CS3_disorder);
 S_CS3_disorder=double(S_CS3_disorder);
-%³äµçÕ¾4
-Pch_CS4_disorder=sdpvar(1,97);%³äµç
-Pdis_CS4_disorder=zeros(1,97);%·Åµç
+%å……ç”µç«™4
+Pch_CS4_disorder=sdpvar(1,97);%å……ç”µ
+Pdis_CS4_disorder=zeros(1,97);%æ”¾ç”µ
 S_CS4_disorder=sdpvar(1,97);%SOC
-f_CS4_disorder=Pch_CS4_disorder*[1:97]';%ÓÅÏÈ³äµçÔ­ÔòÄ¿±êº¯Êı
+f_CS4_disorder=Pch_CS4_disorder*[1:97]';%ä¼˜å…ˆå……ç”µåŸåˆ™ç›®æ ‡å‡½æ•°
 C_CS4_disorder=[0<=Pch_CS4_disorder<=Forecast_CS4(1,:),
     Forecast_CS4(3,:)<=S_CS4_disorder<=Forecast_CS4(4,:),
     S_CS4_disorder(1)==0.25*0.95*Pch_CS4_disorder(1)+Forecast_CS4(5,1),
-    S_CS4_disorder(2:97)==S_CS4_disorder(1:96)+0.25*0.95*Pch_CS4_disorder(2:97)+Forecast_CS4(5,2:97)];%Ô¼ÊøÌõ¼ş
+    S_CS4_disorder(2:97)==S_CS4_disorder(1:96)+0.25*0.95*Pch_CS4_disorder(2:97)+Forecast_CS4(5,2:97)];%çº¦æŸæ¡ä»¶
 solvesdp(C_CS4_disorder,f_CS4_disorder);
 Pch_CS4_disorder=double(Pch_CS4_disorder);
 S_CS4_disorder=double(S_CS4_disorder);
-%»æÍ¼£¬ÒÔ³äµçÕ¾3ÎªÀı
-figure(1);
+%ç»˜å›¾ï¼Œä»¥å……ç”µç«™3ä¸ºä¾‹
+figure(7);
 hold on
-plot(Forecast_CS3(1,:),'b')%³äµç¹¦ÂÊ±ß½ç
-plot(-Forecast_CS3(2,:),'g')%·Åµç¹¦ÂÊ±ß½ç
+plot(Forecast_CS3(1,:),'b')%å……ç”µåŠŸç‡è¾¹ç•Œ
+plot(-Forecast_CS3(2,:),'g')%æ”¾ç”µåŠŸç‡è¾¹ç•Œ
 plot(Pch_CS3_disorder,'r.-')
-legend('³äµç¹¦ÂÊÉÏ½ç','·Åµç¹¦ÂÊÉÏ½ç','Êµ¼Ê³ä·Åµç¹¦ÂÊ')
-xlabel Ê±¼ä
-ylabel ¹¦ÂÊ(kW)
-figure(2);
+legend('å……ç”µåŠŸç‡ä¸Šç•Œ','æ”¾ç”µåŠŸç‡ä¸Šç•Œ','å®é™…å……æ”¾ç”µåŠŸç‡')
+xlabel æ—¶é—´
+ylabel åŠŸç‡(kW)
+figure(8);
 hold on
-plot(Forecast_CS3(4,:),'g')%SOCÉÏ½ç
-plot(Forecast_CS3(3,:),'b')%SOCÏÂ½ç
+plot(Forecast_CS3(4,:),'g')%SOCä¸Šç•Œ
+plot(Forecast_CS3(3,:),'b')%SOCä¸‹ç•Œ
 plot(S_CS3_disorder,'r.-')
-legend('SOCÉÏ½ç','SOCÏÂ½ç','Êµ¼ÊSOC')
-xlabel Ê±¼ä
-ylabel ÈİÁ¿(kWh)
-%Ñ¡È¡Ç°96¸ö¶ÏÃæ
+legend('SOCä¸Šç•Œ','SOCä¸‹ç•Œ','å®é™…SOC')
+xlabel æ—¶é—´
+ylabel å®¹é‡(kWh)
+%é€‰å–å‰96ä¸ªæ–­é¢
 Pch_CS1_disorder=Pch_CS1_disorder(1:96);Pch_CS2_disorder=Pch_CS2_disorder(1:96);Pch_CS3_disorder=Pch_CS3_disorder(1:96);Pch_CS4_disorder=Pch_CS4_disorder(1:96);
-save('data_disorder','Pch_CS1_disorder','Pch_CS2_disorder','Pch_CS3_disorder','Pch_CS4_disorder');%ÎŞĞò³äµçÊı¾İ
+save('data_disorder','Pch_CS1_disorder','Pch_CS2_disorder','Pch_CS3_disorder','Pch_CS4_disorder');%æ— åºå……ç”µæ•°æ®
