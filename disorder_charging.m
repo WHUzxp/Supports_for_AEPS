@@ -51,7 +51,7 @@ solvesdp(C_CS4_disorder,f_CS4_disorder);
 Pch_CS4_disorder=double(Pch_CS4_disorder);
 S_CS4_disorder=double(S_CS4_disorder);
 %绘图，以充电站3为例
-figure(7);
+figure(1);
 hold on
 plot(Forecast_CS3(1,:),'b')%充电功率边界
 plot(-Forecast_CS3(2,:),'g')%放电功率边界
@@ -59,7 +59,7 @@ plot(Pch_CS3_disorder,'r.-')
 legend('充电功率上界','放电功率上界','实际充放电功率')
 xlabel 时间
 ylabel 功率(kW)
-figure(8);
+figure(2);
 hold on
 plot(Forecast_CS3(4,:),'g')%SOC上界
 plot(Forecast_CS3(3,:),'b')%SOC下界
