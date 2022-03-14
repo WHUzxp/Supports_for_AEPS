@@ -1,42 +1,42 @@
-%%%ÎŞĞò³äµçÍ¶±ê
+%%%æ— åºå……ç”µæŠ•æ ‡
 clear
 clc
 load data_disorder
-Pch=[Pch_CS1_disorder;Pch_CS2_disorder;Pch_CS3_disorder;Pch_CS4_disorder];%³äµçÕ¾³äµç¹¦ÂÊ
-%ÊĞ³¡³öÇåÎÊÌâ
-Link=zeros(24,96);%Ê±¶Î»»Ëã¾ØÕó(ÈÕÇ°1h»»ËãÎªÊµÊ±15min)
+Pch=[Pch_CS1_disorder;Pch_CS2_disorder;Pch_CS3_disorder;Pch_CS4_disorder];%å……ç”µç«™å……ç”µåŠŸç‡
+%å¸‚åœºå‡ºæ¸…é—®é¢˜
+Link=zeros(24,96);%æ—¶æ®µæ¢ç®—çŸ©é˜µ(æ—¥å‰1hæ¢ç®—ä¸ºå®æ—¶15min)
 for i=1:24
     Link(i,4*i-3:4*i)=1;
 end
 Loadcurve=[0.955391944564747,0.978345604157644,1,0.995019488956258,0.972932005197055,0.970333477695972,0.930489389346037,0.890428757037679,0.902771762667822,0.941966219142486,0.911000433087917,0.862061498484192,0.840190558683413,0.831095712429623,0.756604590731919,0.671719359029883,0.611520138588133,0.582936336076224,0.572542226071893,0.574707665656128,0.587267215244695,0.644218276310091,0.755521870939801,0.884798614118666];
-Loadcurve=Loadcurve*Link;%»»³É96¸öÊ±¶Î
-PL_base=[5.704;5.705;5.631;6.518;4.890;5.705;5.847]*1000;%¸ººÉ·Ö²¼
-PL=PL_base*Loadcurve;%»ù´¡¸ººÉ(¸ººÉÇúÏß´Ó08:00¿ªÊ¼ËãÆğ£¬¼´µÚ9¸öÊ±¶Î)
-Pf=sdpvar(7,96);%À¡Ïß¹¦ÂÊ
-Pf(1,:)=PL(1,:)+Pch(1,:);Pf(2,:)=PL(2,:);Pf(3,:)=PL(3,:);Pf(4,:)=PL(4,:)+Pch(2,:);Pf(5,:)=PL(5,:)+Pch(3,:);Pf(6,:)=PL(6,:);Pf(7,:)=PL(7,:)+Pch(4,:);%À¡Ïß¹¦ÂÊ×é³É
-Pg=sdpvar(10,96);%·¢µçÉÌ·Ö¶ÎµçÁ¿
-Pg_step=1000*[20,5,3,2,2,2,2,2,2,inf]';%±¨¼ÛÇø¼ä
-Price_DSO=[3:12]'*0.1;%·Ö¶Îµç¼Û
-Obj=0.25*sum(sum((Price_DSO*ones(1,96)).*Pg));%Ä¿±êÎªÓÃµç·ÑÓÃ×îĞ¡
-Constraint=[0<=Pg<=Pg_step*ones(1,96),sum(Pg)==sum(Pf)];%Ô¼ÊøÌõ¼ş
-solvesdp(Constraint,Obj);%Çó½âÏßĞÔ¹æ»®ÎÊÌâ
-Pg=double(Pg);%·¢µç»ú¹¦ÂÊ
-Pf=double(Pf);%À¡Ïß¹¦ÂÊ
-isPg=(Pg>0);%ÎªÁË¼ÆËã³öÇåµç¼Û£¬¼ÆËã·¢µç»ú·Ö¶ÎÑ¡ÔñÇé¿ö
-DLMP=sum(isPg)/10+0.2;%³öÇåµç¼Û¼ÆËã
-%»æÍ¼
-figure(1)%½Úµã±ß¼Êµç¼Û
+Loadcurve=Loadcurve*Link;%æ¢æˆ96ä¸ªæ—¶æ®µ
+PL_base=[5.704;5.705;5.631;6.518;4.890;5.705;5.847]*1000;%è´Ÿè·åˆ†å¸ƒ
+PL=PL_base*Loadcurve;%åŸºç¡€è´Ÿè·(è´Ÿè·æ›²çº¿ä»08:00å¼€å§‹ç®—èµ·ï¼Œå³ç¬¬9ä¸ªæ—¶æ®µ)
+Pf=sdpvar(7,96);%é¦ˆçº¿åŠŸç‡
+Pf(1,:)=PL(1,:)+Pch(1,:);Pf(2,:)=PL(2,:);Pf(3,:)=PL(3,:);Pf(4,:)=PL(4,:)+Pch(2,:);Pf(5,:)=PL(5,:)+Pch(3,:);Pf(6,:)=PL(6,:);Pf(7,:)=PL(7,:)+Pch(4,:);%é¦ˆçº¿åŠŸç‡ç»„æˆ
+Pg=sdpvar(10,96);%å‘ç”µå•†åˆ†æ®µç”µé‡
+Pg_step=1000*[20,5,3,2,2,2,2,2,2,inf]';%æŠ¥ä»·åŒºé—´
+Price_DSO=[3:12]'*0.1;%åˆ†æ®µç”µä»·
+Obj=0.25*sum(sum((Price_DSO*ones(1,96)).*Pg));%ç›®æ ‡ä¸ºç”¨ç”µè´¹ç”¨æœ€å°
+Constraint=[0<=Pg<=Pg_step*ones(1,96),sum(Pg)==sum(Pf)];%çº¦æŸæ¡ä»¶
+solvesdp(Constraint,Obj);%æ±‚è§£çº¿æ€§è§„åˆ’é—®é¢˜
+Pg=double(Pg);%å‘ç”µæœºåŠŸç‡
+Pf=double(Pf);%é¦ˆçº¿åŠŸç‡
+isPg=(Pg>0);%ä¸ºäº†è®¡ç®—å‡ºæ¸…ç”µä»·ï¼Œè®¡ç®—å‘ç”µæœºåˆ†æ®µé€‰æ‹©æƒ…å†µ
+DLMP=sum(isPg)/10+0.2;%å‡ºæ¸…ç”µä»·è®¡ç®—
+%ç»˜å›¾
+figure(7)%èŠ‚ç‚¹è¾¹é™…ç”µä»·
 stairs(DLMP);
-xlabel Ê±¼ä
-ylabel µç¼Û(Ôª/kWh)
+xlabel æ—¶é—´
+ylabel ç”µä»·(å…ƒ/kWh)
 ylim([0.3,1.3])
-figure(2)%¸ººÉÇúÏß
+figure(8)%è´Ÿè·æ›²çº¿
 hold on
 plot(sum(PL)/1000);
 plot(sum(Pf)/1000,'r.-');
-xlabel Ê±¼ä
-ylabel ¸ººÉ(MW)
-legend('»ù´¡¸ººÉ','ÎŞĞò³äµç¸ººÉ')
-Cost=sum(sum(Pch).*DLMP);%×ÜÓÃµç·ÑÓÃ
-result_disorder.Cost=Cost;result_disorder.DLMP=DLMP;result_disorder.Pf=Pf;result_disorder.Pg=Pg;%½á¹û±£´æ
+xlabel æ—¶é—´
+ylabel è´Ÿè·(MW)
+legend('åŸºç¡€è´Ÿè·','æ— åºå……ç”µè´Ÿè·')
+Cost=sum(sum(Pch).*DLMP);%æ€»ç”¨ç”µè´¹ç”¨
+result_disorder.Cost=Cost;result_disorder.DLMP=DLMP;result_disorder.Pf=Pf;result_disorder.Pg=Pg;%ç»“æœä¿å­˜
 save('result_disorder','result_disorder');
