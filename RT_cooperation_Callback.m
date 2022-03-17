@@ -1,54 +1,55 @@
-%%%ºÏ×÷Í¶±êº¯Êı%%%
-%%%ÊµÊ±%%%
+%%%åˆä½œæŠ•æ ‡å‡½æ•°%%%
+%%%å®æ—¶%%%
 function result_RT_cooperation=RT_cooperation_Callback(l,Pch_last,Pdis_last,price_balance)
+yalmip('clear')
 load data_potential_DA
-%¾ö²ß±äÁ¿
-S=sdpvar(4,96);%¹ãÒå´¢ÄÜÉè±¸µçÁ¿
-delta_Pg=sdpvar;%·¢µçÉÌ²îÁ¿
-delta_Pf=sdpvar(7,1);%À¡Ïß¹¦ÂÊ²îÁ¿
-Pch=sdpvar(4,96);%Êµ¼Ê³äµçµçÁ¿
-Pch(:,1:l-1)=Pch_last(:,1:l-1);%¸³³õÖµ
-Pdis=sdpvar(4,96);%Êµ¼Ê·ÅµçµçÁ¿
-Pdis(:,1:l-1)=Pdis_last(:,1:l-1);%¸³³õÖµ
-delta_Pch=sdpvar(4,96);%³öÇå³äµç²îÁ¿
-delta_Pdis=sdpvar(4,96);%³öÇå·Åµç²îÁ¿
-Beta=sdpvar;%¹¦ÂÊ²îÁ¿
-Lagrant_balance=sdpvar(7,1);%¹¦ÂÊÆ½ºâÔ¼ÊøµÄÀ­¸ñÀÊÈÕ³Ë×Ó
-DLMP=Lagrant_balance/0.25;%ÅäµçÍø½Úµã±ß¼Êµç¼Û
-Lagrant_G=sdpvar(1,1);%Æ½ºâ½ÚµãÀ­¸ñÀÊÈÕ³Ë×Ó
-Lagrant_G_left=sdpvar(1,1);%·¢µçÉÌµçÁ¿ÏÂ½ç
-Lagrant_G_right=sdpvar(1,1);%·¢µçÉÌµçÁ¿ÉÏ½ç
-b_Lagrant_G_left=binvar(1,1);%·¢µçÉÌµçÁ¿ÏÂ½ç²¼¶û±äÁ¿
-b_Lagrant_G_right=binvar(1,1);%·¢µçÉÌµçÁ¿ÉÏ½ç²¼¶û±äÁ¿
-Lagrant_L_left=sdpvar(7,1);%ÏßÂ·¹¦ÂÊÏÂ½ç
-Lagrant_L_right=sdpvar(7,1);%ÏßÂ·¹¦ÂÊÉÏ½ç
-b_Lagrant_L_left=binvar(7,1);%ÏßÂ·¹¦ÂÊÉÏ½ç²¼¶û±äÁ¿
-b_Lagrant_L_right=binvar(7,1);%ÏßÂ·¹¦ÂÊÏÂ½ç²¼¶û±äÁ¿
-Lagrant_beta_in=sdpvar(1,1);%Ôö·¢¹¦ÂÊÀ­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_in=binvar(1,1);%Ôö·¢¹¦ÂÊ²¼¶û±äÁ¿
-Lagrant_beta_de=sdpvar(1,1);%¼õ·¢¹¦ÂÊÀ­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_de=binvar(1,1);%¼õ·¢¹¦ÂÊ²¼¶û±äÁ¿
-Lagrant_beta_eq=sdpvar(1,1);%¹¦ÂÊÎŞ±ä»¯À­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_eq=binvar(1,1);%¹¦ÂÊÎŞ±ä»¯²¼¶û±äÁ¿
-%»ù±¾²ÎÊı
-Pf_limit=1000*[40,40,40,40,40,40,40]';%À¡Ïß¹¦ÂÊÏŞÖÆ
+%å†³ç­–å˜é‡
+S=sdpvar(4,96);%å¹¿ä¹‰å‚¨èƒ½è®¾å¤‡ç”µé‡
+delta_Pg=sdpvar;%å‘ç”µå•†å·®é‡
+delta_Pf=sdpvar(7,1);%é¦ˆçº¿åŠŸç‡å·®é‡
+Pch=sdpvar(4,96);%å®é™…å……ç”µç”µé‡
+Pch(:,1:l-1)=Pch_last(:,1:l-1);%èµ‹åˆå€¼
+Pdis=sdpvar(4,96);%å®é™…æ”¾ç”µç”µé‡
+Pdis(:,1:l-1)=Pdis_last(:,1:l-1);%èµ‹åˆå€¼
+delta_Pch=sdpvar(4,96);%å‡ºæ¸…å……ç”µå·®é‡
+delta_Pdis=sdpvar(4,96);%å‡ºæ¸…æ”¾ç”µå·®é‡
+Beta=sdpvar;%åŠŸç‡å·®é‡
+Lagrant_balance=sdpvar(7,1);%åŠŸç‡å¹³è¡¡çº¦æŸçš„æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+DLMP=Lagrant_balance/0.25;%é…ç”µç½‘èŠ‚ç‚¹è¾¹é™…ç”µä»·
+Lagrant_G=sdpvar(1,1);%å¹³è¡¡èŠ‚ç‚¹æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+Lagrant_G_left=sdpvar(1,1);%å‘ç”µå•†ç”µé‡ä¸‹ç•Œ
+Lagrant_G_right=sdpvar(1,1);%å‘ç”µå•†ç”µé‡ä¸Šç•Œ
+b_Lagrant_G_left=binvar(1,1);%å‘ç”µå•†ç”µé‡ä¸‹ç•Œå¸ƒå°”å˜é‡
+b_Lagrant_G_right=binvar(1,1);%å‘ç”µå•†ç”µé‡ä¸Šç•Œå¸ƒå°”å˜é‡
+Lagrant_L_left=sdpvar(7,1);%çº¿è·¯åŠŸç‡ä¸‹ç•Œ
+Lagrant_L_right=sdpvar(7,1);%çº¿è·¯åŠŸç‡ä¸Šç•Œ
+b_Lagrant_L_left=binvar(7,1);%çº¿è·¯åŠŸç‡ä¸Šç•Œå¸ƒå°”å˜é‡
+b_Lagrant_L_right=binvar(7,1);%çº¿è·¯åŠŸç‡ä¸‹ç•Œå¸ƒå°”å˜é‡
+Lagrant_beta_in=sdpvar(1,1);%å¢å‘åŠŸç‡æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_in=binvar(1,1);%å¢å‘åŠŸç‡å¸ƒå°”å˜é‡
+Lagrant_beta_de=sdpvar(1,1);%å‡å‘åŠŸç‡æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_de=binvar(1,1);%å‡å‘åŠŸç‡å¸ƒå°”å˜é‡
+Lagrant_beta_eq=sdpvar(1,1);%åŠŸç‡æ— å˜åŒ–æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_eq=binvar(1,1);%åŠŸç‡æ— å˜åŒ–å¸ƒå°”å˜é‡
+%åŸºæœ¬å‚æ•°
+Pf_limit=1000*[40,40,40,40,40,40,40]';%é¦ˆçº¿åŠŸç‡é™åˆ¶
 load data_potential_RT
-Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%³äµçÕ¾³äµç±¨Á¿ÉÏÏŞ
-Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%³äµçÕ¾·Åµç±¨Á¿ÉÏÏŞ
-Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%³äµçÕ¾µçÁ¿ÏÂÏŞ;
-Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%³äµçÕ¾µçÁ¿ÉÏÏŞ;
-deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%³äµçÕ¾µçÁ¿±ä»¯Á¿;
-lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%µÚ96¸öÊ±¶Î±ØĞëÍê³ÉµÄ³äµçÁ¿
+Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%å……ç”µç«™å……ç”µæŠ¥é‡ä¸Šé™
+Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%å……ç”µç«™æ”¾ç”µæŠ¥é‡ä¸Šé™
+Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%å……ç”µç«™ç”µé‡ä¸‹é™;
+Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%å……ç”µç«™ç”µé‡ä¸Šé™;
+deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%å……ç”µç«™ç”µé‡å˜åŒ–é‡;
+lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%ç¬¬96ä¸ªæ—¶æ®µå¿…é¡»å®Œæˆçš„å……ç”µé‡
 load Bid_reference
-Price_G_DA=pi_DA_reference(1,:);%ÈÕÇ°½Úµã±ß¼Êµç¼Û
-Pch_DA=result.Pch;%ÈÕÇ°³äµç¾ö²ß
-Pdis_DA=result.Pdis;%ÈÕÇ°·Åµç¾ö²ß
-Pf_DA=result.Pf;%ÈÕÇ°À¡Ïß¹¦ÂÊ
-%KKTÌõ¼ş
+Price_G_DA=pi_DA_reference(1,:);%æ—¥å‰èŠ‚ç‚¹è¾¹é™…ç”µä»·
+Pch_DA=result.Pch;%æ—¥å‰å……ç”µå†³ç­–
+Pdis_DA=result.Pdis;%æ—¥å‰æ”¾ç”µå†³ç­–
+Pf_DA=result.Pf;%æ—¥å‰é¦ˆçº¿åŠŸç‡
+%KKTæ¡ä»¶
 Ckkt=[];
 Ckkt=[Ckkt,Price_G_DA(l)*0.25-Lagrant_G-Lagrant_G_left+Lagrant_G_right+Lagrant_beta_in-Lagrant_beta_de==0,
     -Lagrant_balance-Lagrant_L_left+Lagrant_L_right+ones(7,1)*Lagrant_G==0,
-    price_balance*0.25-Lagrant_beta_in-Lagrant_beta_de-Lagrant_beta_eq==0];%KKTÆ½ºâÌõ¼ş
+    price_balance*0.25-Lagrant_beta_in-Lagrant_beta_de-Lagrant_beta_eq==0];%KKTå¹³è¡¡æ¡ä»¶
 Ckkt=[Ckkt,delta_Pg==sum(delta_Pf),
     delta_Pf(1)==delta_Pch(1,l)-delta_Pdis(1,l),
     delta_Pf(2)==0,
@@ -56,7 +57,7 @@ Ckkt=[Ckkt,delta_Pg==sum(delta_Pf),
     delta_Pf(4)==delta_Pch(2,l)-delta_Pdis(2,l),
     delta_Pf(5)==delta_Pch(3,l)-delta_Pdis(3,l),
     delta_Pf(6)==0,
-    delta_Pf(7)==delta_Pch(4,l)-delta_Pdis(4,l)];%µÈÊ½Ô¼ÊøÔ­Ê¼Ìõ¼ş
+    delta_Pf(7)==delta_Pch(4,l)-delta_Pdis(4,l)];%ç­‰å¼çº¦æŸåŸå§‹æ¡ä»¶
 Ckkt=[Ckkt,0<=Pf_limit+delta_Pf+Pf_DA(:,l)<=1E6*b_Lagrant_L_left,
     0<=Lagrant_L_left<=1E6*(1-b_Lagrant_L_left),
     0<=Pf_limit-delta_Pf-Pf_DA(:,l)<=1E6*b_Lagrant_L_right,
@@ -73,21 +74,21 @@ Ckkt=[Ckkt,0<=Pf_limit+delta_Pf+Pf_DA(:,l)<=1E6*b_Lagrant_L_left,
     0.0001-1E5*(1-b_Lagrant_beta_in)<=delta_Pg<=-0.0001+1E5*(1-b_Lagrant_beta_de),
     0<=Lagrant_beta_eq<=1*b_Lagrant_beta_eq,
     b_Lagrant_beta_in+b_Lagrant_beta_de+b_Lagrant_beta_eq==1,
-    Beta>=0];%»¥²¹Ìõ¼ş
-%Ô­Ê¼Ìõ¼ş
+    Beta>=0];%äº’è¡¥æ¡ä»¶
+%åŸå§‹æ¡ä»¶
 Cpri=[];
 Cpri=[Cpri,0<=Pch<=Pchmax,0<=Pdis<=Pdismax,Smin<=S<=Smax,S(:,1)==0.25*0.95*Pch(:,1)-0.25*Pdis(:,1)/0.95+deltaS(:,1),
     S(:,2:96)==S(:,1:95)+0.25*0.95*Pch(:,2:96)-0.25*Pdis(:,2:96)/0.95+deltaS(:,2:96),
-    0==S(:,96)+lastS,Pch==Pch_DA+delta_Pch,Pdis==Pdis_DA+delta_Pdis];%µçÁ¿Ô¼Êø
-%Ä¿±êº¯Êı
+    0==S(:,96)+lastS,Pch==Pch_DA+delta_Pch,Pdis==Pdis_DA+delta_Pdis];%ç”µé‡çº¦æŸ
+%ç›®æ ‡å‡½æ•°
 Obj=0.25*sum(sum((ones(4,1)*Price_G_DA(l+1:96)).*(delta_Pch(:,l+1:96)-delta_Pdis(:,l+1:96))))+0.25*Price_G_DA(l)*delta_Pg+0.25*price_balance*Beta-1E5*Lagrant_G_left+1E5*Lagrant_G_right+sum(Lagrant_L_left.*(Pf_limit+Pf_DA(:,l)))+sum(Lagrant_L_right.*(Pf_limit-Pf_DA(:,l)));
-%Ô¼ÊøÌõ¼ş
+%çº¦æŸæ¡ä»¶
 Constraints=[Ckkt,Cpri];
-%Çó½âÄ£ĞÍ
+%æ±‚è§£æ¨¡å‹
 ops=sdpsettings('solver','gurobi','gurobi.OptimalityTol',1e-8,'gurobi.FeasibilityTol',1e-8,'gurobi.IntFeasTol',1e-8);
 ops.gurobi.MIPGap=1e-8;
 solvesdp(Constraints,Obj,ops);
-%µÃµ½±äÁ¿
+%å¾—åˆ°å˜é‡
 result_RT_cooperation.Pch=double(Pch);
 result_RT_cooperation.Pdis=double(Pdis);
 result_RT_cooperation.delta_Pch=double(delta_Pch);
