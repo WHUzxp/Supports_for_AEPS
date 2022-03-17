@@ -1,61 +1,62 @@
-%%%¶ÀÁ¢Í¶±êº¯Êı%%%
-%%%ÊµÊ±%%%
+%%%ç‹¬ç«‹æŠ•æ ‡å‡½æ•°%%%
+%%%å®æ—¶%%%
 function result_RT_single=RT_single_Callback(l,Set_CS_bid,Pch_last,Pdis_last,price_balance)
+yalmip('clear')
 load data_potential_DA
 load result_DA_clearing
-price_balance=0.1;%Æ½ºâµç¼Û
-Pch_DA=Pch_DA_clearing;%ÈÕÇ°³äµç¾ö²ß
-Pdis_DA=Pdis_DA_clearing;%ÈÕÇ°·Åµç¾ö²ß
-Pf_DA=Pf_DA_clearing;%ÈÕÇ°À¡Ïß¹¦ÂÊ
-Set_CS_nobid=setdiff([1,2,3,4],Set_CS_bid);%ÆäÓà³äµçÕ¾
-%¾ö²ß±äÁ¿
-S=sdpvar(1,96);%¹ãÒå´¢ÄÜÉè±¸µçÁ¿
-delta_Pg=sdpvar;%·¢µçÉÌ²îÁ¿
-delta_Pf=sdpvar(7,1);%À¡Ïß¹¦ÂÊ²îÁ¿
-Pch=sdpvar(4,96);%Êµ¼Ê³äµçµçÁ¿
-Pch(Set_CS_nobid,:)=Pch_last(Set_CS_nobid,:);%ÆäËû³äµçÕ¾µÄ³äµç¾ö²ß
-Pch(Set_CS_bid,1:l-1)=Pch_last(Set_CS_bid,1:l-1);%¸³³õÖµ
-Pdis=sdpvar(4,96);%Êµ¼Ê·ÅµçµçÁ¿
-Pdis(Set_CS_nobid,:)=Pdis_last(Set_CS_nobid,:);%ÆäËû³äµçÕ¾µÄ·Åµç¾ö²ß
-Pdis(Set_CS_bid,1:l-1)=Pdis_last(Set_CS_bid,1:l-1);%¸³³õÖµ
-delta_Pch=sdpvar(4,96);%³öÇå³äµç²îÁ¿
+price_balance=0.1;%å¹³è¡¡ç”µä»·
+Pch_DA=Pch_DA_clearing;%æ—¥å‰å……ç”µå†³ç­–
+Pdis_DA=Pdis_DA_clearing;%æ—¥å‰æ”¾ç”µå†³ç­–
+Pf_DA=Pf_DA_clearing;%æ—¥å‰é¦ˆçº¿åŠŸç‡
+Set_CS_nobid=setdiff([1,2,3,4],Set_CS_bid);%å…¶ä½™å……ç”µç«™
+%å†³ç­–å˜é‡
+S=sdpvar(1,96);%å¹¿ä¹‰å‚¨èƒ½è®¾å¤‡ç”µé‡
+delta_Pg=sdpvar;%å‘ç”µå•†å·®é‡
+delta_Pf=sdpvar(7,1);%é¦ˆçº¿åŠŸç‡å·®é‡
+Pch=sdpvar(4,96);%å®é™…å……ç”µç”µé‡
+Pch(Set_CS_nobid,:)=Pch_last(Set_CS_nobid,:);%å…¶ä»–å……ç”µç«™çš„å……ç”µå†³ç­–
+Pch(Set_CS_bid,1:l-1)=Pch_last(Set_CS_bid,1:l-1);%èµ‹åˆå€¼
+Pdis=sdpvar(4,96);%å®é™…æ”¾ç”µç”µé‡
+Pdis(Set_CS_nobid,:)=Pdis_last(Set_CS_nobid,:);%å…¶ä»–å……ç”µç«™çš„æ”¾ç”µå†³ç­–
+Pdis(Set_CS_bid,1:l-1)=Pdis_last(Set_CS_bid,1:l-1);%èµ‹åˆå€¼
+delta_Pch=sdpvar(4,96);%å‡ºæ¸…å……ç”µå·®é‡
 delta_Pch(Set_CS_nobid,:)=Pch_last(Set_CS_nobid,:)-Pch_DA(Set_CS_nobid,:);
-delta_Pdis=sdpvar(4,96);%³öÇå·Åµç²îÁ¿
+delta_Pdis=sdpvar(4,96);%å‡ºæ¸…æ”¾ç”µå·®é‡
 delta_Pdis(Set_CS_nobid,:)=Pdis_last(Set_CS_nobid,:)-Pdis_DA(Set_CS_nobid,:);
-Beta=sdpvar;%¹¦ÂÊ²îÁ¿
-Lagrant_balance=sdpvar(7,1);%¹¦ÂÊÆ½ºâÔ¼ÊøµÄÀ­¸ñÀÊÈÕ³Ë×Ó
-DLMP=Lagrant_balance/0.25;%ÅäµçÍø½Úµã±ß¼Êµç¼Û
-Lagrant_G=sdpvar(1,1);%Æ½ºâ½ÚµãÀ­¸ñÀÊÈÕ³Ë×Ó
-Lagrant_G_left=sdpvar(1,1);%·¢µçÉÌµçÁ¿ÏÂ½ç
-Lagrant_G_right=sdpvar(1,1);%·¢µçÉÌµçÁ¿ÉÏ½ç
-b_Lagrant_G_left=binvar(1,1);%·¢µçÉÌµçÁ¿ÏÂ½ç²¼¶û±äÁ¿
-b_Lagrant_G_right=binvar(1,1);%·¢µçÉÌµçÁ¿ÉÏ½ç²¼¶û±äÁ¿
-Lagrant_L_left=sdpvar(7,1);%ÏßÂ·¹¦ÂÊÏÂ½ç
-Lagrant_L_right=sdpvar(7,1);%ÏßÂ·¹¦ÂÊÉÏ½ç
-b_Lagrant_L_left=binvar(7,1);%ÏßÂ·¹¦ÂÊÉÏ½ç²¼¶û±äÁ¿
-b_Lagrant_L_right=binvar(7,1);%ÏßÂ·¹¦ÂÊÏÂ½ç²¼¶û±äÁ¿
-Lagrant_beta_in=sdpvar(1,1);%Ôö·¢¹¦ÂÊÀ­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_in=binvar(1,1);%Ôö·¢¹¦ÂÊ²¼¶û±äÁ¿
-Lagrant_beta_de=sdpvar(1,1);%¼õ·¢¹¦ÂÊÀ­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_de=binvar(1,1);%¼õ·¢¹¦ÂÊ²¼¶û±äÁ¿
-Lagrant_beta_eq=sdpvar(1,1);%¹¦ÂÊÎŞ±ä»¯À­¸ñÀÊÈÕ³Ë×Ó
-b_Lagrant_beta_eq=binvar(1,1);%¹¦ÂÊÎŞ±ä»¯²¼¶û±äÁ¿
-%»ù±¾²ÎÊı
+Beta=sdpvar;%åŠŸç‡å·®é‡
+Lagrant_balance=sdpvar(7,1);%åŠŸç‡å¹³è¡¡çº¦æŸçš„æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+DLMP=Lagrant_balance/0.25;%é…ç”µç½‘èŠ‚ç‚¹è¾¹é™…ç”µä»·
+Lagrant_G=sdpvar(1,1);%å¹³è¡¡èŠ‚ç‚¹æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+Lagrant_G_left=sdpvar(1,1);%å‘ç”µå•†ç”µé‡ä¸‹ç•Œ
+Lagrant_G_right=sdpvar(1,1);%å‘ç”µå•†ç”µé‡ä¸Šç•Œ
+b_Lagrant_G_left=binvar(1,1);%å‘ç”µå•†ç”µé‡ä¸‹ç•Œå¸ƒå°”å˜é‡
+b_Lagrant_G_right=binvar(1,1);%å‘ç”µå•†ç”µé‡ä¸Šç•Œå¸ƒå°”å˜é‡
+Lagrant_L_left=sdpvar(7,1);%çº¿è·¯åŠŸç‡ä¸‹ç•Œ
+Lagrant_L_right=sdpvar(7,1);%çº¿è·¯åŠŸç‡ä¸Šç•Œ
+b_Lagrant_L_left=binvar(7,1);%çº¿è·¯åŠŸç‡ä¸Šç•Œå¸ƒå°”å˜é‡
+b_Lagrant_L_right=binvar(7,1);%çº¿è·¯åŠŸç‡ä¸‹ç•Œå¸ƒå°”å˜é‡
+Lagrant_beta_in=sdpvar(1,1);%å¢å‘åŠŸç‡æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_in=binvar(1,1);%å¢å‘åŠŸç‡å¸ƒå°”å˜é‡
+Lagrant_beta_de=sdpvar(1,1);%å‡å‘åŠŸç‡æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_de=binvar(1,1);%å‡å‘åŠŸç‡å¸ƒå°”å˜é‡
+Lagrant_beta_eq=sdpvar(1,1);%åŠŸç‡æ— å˜åŒ–æ‹‰æ ¼æœ—æ—¥ä¹˜å­
+b_Lagrant_beta_eq=binvar(1,1);%åŠŸç‡æ— å˜åŒ–å¸ƒå°”å˜é‡
+%åŸºæœ¬å‚æ•°
 load Bid_reference
-Price_G_DA=pi_DA_reference(1,:);%ÈÕÇ°½Úµã±ß¼Êµç¼Û
-Pf_limit=1000*[40,40,40,40,40,40,40]';%À¡Ïß¹¦ÂÊÏŞÖÆ
+Price_G_DA=pi_DA_reference(1,:);%æ—¥å‰èŠ‚ç‚¹è¾¹é™…ç”µä»·
+Pf_limit=1000*[40,40,40,40,40,40,40]';%é¦ˆçº¿åŠŸç‡é™åˆ¶
 load data_potential_RT
-Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%³äµçÕ¾³äµç±¨Á¿ÉÏÏŞ
-Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%³äµçÕ¾·Åµç±¨Á¿ÉÏÏŞ
-Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%³äµçÕ¾µçÁ¿ÏÂÏŞ;
-Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%³äµçÕ¾µçÁ¿ÉÏÏŞ;
-deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%³äµçÕ¾µçÁ¿±ä»¯Á¿;
-lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%µÚ96¸öÊ±¶Î±ØĞëÍê³ÉµÄ³äµçÁ¿
-%KKTÌõ¼ş
+Pchmax=[RT_CS1(l).Pch(1:96);RT_CS2(l).Pch(1:96);RT_CS3(l).Pch(1:96);RT_CS4(l).Pch(1:96)];%å……ç”µç«™å……ç”µæŠ¥é‡ä¸Šé™
+Pdismax=[RT_CS1(l).Pdis(1:96);RT_CS2(l).Pdis(1:96);RT_CS3(l).Pdis(1:96);RT_CS4(l).Pdis(1:96)];%å……ç”µç«™æ”¾ç”µæŠ¥é‡ä¸Šé™
+Smin=[RT_CS1(l).Smin(1:96);RT_CS2(l).Smin(1:96);RT_CS3(l).Smin(1:96);RT_CS4(l).Smin(1:96)];%å……ç”µç«™ç”µé‡ä¸‹é™;
+Smax=[RT_CS1(l).Smax(1:96);RT_CS2(l).Smax(1:96);RT_CS3(l).Smax(1:96);RT_CS4(l).Smax(1:96)];%å……ç”µç«™ç”µé‡ä¸Šé™;
+deltaS=[RT_CS1(l).dS(1:96);RT_CS2(l).dS(1:96);RT_CS3(l).dS(1:96);RT_CS4(l).dS(1:96)];%å……ç”µç«™ç”µé‡å˜åŒ–é‡;
+lastS=[RT_CS1(l).dS(97);RT_CS2(l).dS(97);RT_CS3(l).dS(97);RT_CS4(l).dS(97)];%ç¬¬96ä¸ªæ—¶æ®µå¿…é¡»å®Œæˆçš„å……ç”µé‡
+%KKTæ¡ä»¶
 Ckkt=[];
 Ckkt=[Ckkt,Price_G_DA(l)*0.25-Lagrant_G-Lagrant_G_left+Lagrant_G_right+Lagrant_beta_in-Lagrant_beta_de==0,
     -Lagrant_balance-Lagrant_L_left+Lagrant_L_right+ones(7,1)*Lagrant_G==0,
-    price_balance*0.25-Lagrant_beta_in-Lagrant_beta_de-Lagrant_beta_eq==0];%KKTÆ½ºâÌõ¼ş
+    price_balance*0.25-Lagrant_beta_in-Lagrant_beta_de-Lagrant_beta_eq==0];%KKTå¹³è¡¡æ¡ä»¶
 Ckkt=[Ckkt,delta_Pg==sum(delta_Pf),
     delta_Pf(1)==delta_Pch(1,l)-delta_Pdis(1,l),
     delta_Pf(2)==0,
@@ -63,7 +64,7 @@ Ckkt=[Ckkt,delta_Pg==sum(delta_Pf),
     delta_Pf(4)==delta_Pch(2,l)-delta_Pdis(2,l),
     delta_Pf(5)==delta_Pch(3,l)-delta_Pdis(3,l),
     delta_Pf(6)==0,
-    delta_Pf(7)==delta_Pch(4,l)-delta_Pdis(4,l)];%µÈÊ½Ô¼ÊøÔ­Ê¼Ìõ¼ş
+    delta_Pf(7)==delta_Pch(4,l)-delta_Pdis(4,l)];%ç­‰å¼çº¦æŸåŸå§‹æ¡ä»¶
 Ckkt=[Ckkt,0<=Pf_limit+delta_Pf+Pf_DA(:,l)<=1E6*b_Lagrant_L_left,
     0<=Lagrant_L_left<=1*(1-b_Lagrant_L_left),
     0<=Pf_limit-delta_Pf-Pf_DA(:,l)<=1E6*b_Lagrant_L_right,
@@ -80,21 +81,21 @@ Ckkt=[Ckkt,0<=Pf_limit+delta_Pf+Pf_DA(:,l)<=1E6*b_Lagrant_L_left,
     0.001-1E5*(1-b_Lagrant_beta_in)<=delta_Pg<=-0.001+1E5*(1-b_Lagrant_beta_de),
     0<=Lagrant_beta_eq<=0.1*b_Lagrant_beta_eq,
     b_Lagrant_beta_in+b_Lagrant_beta_de+b_Lagrant_beta_eq==1,
-    Beta>=0];%»¥²¹Ìõ¼ş
-%Ô­Ê¼Ìõ¼ş
+    Beta>=0];%äº’è¡¥æ¡ä»¶
+%åŸå§‹æ¡ä»¶
 Cpri=[];
 Cpri=[Cpri,0<=Pch(Set_CS_bid,:)<=Pchmax(Set_CS_bid,:),0<=Pdis(Set_CS_bid,:)<=Pdismax(Set_CS_bid,:),Smin(Set_CS_bid,:)<=S<=Smax(Set_CS_bid,:),S(1)==0.25*0.95*Pch(Set_CS_bid,1)-0.25*Pdis(Set_CS_bid,1)/0.95+deltaS(Set_CS_bid,1),
     S(2:96)==S(1:95)+0.25*0.95*Pch(Set_CS_bid,2:96)-0.25*Pdis(Set_CS_bid,2:96)/0.95+deltaS(Set_CS_bid,2:96),
-    0==S(96)+lastS(Set_CS_bid),Pch==Pch_DA+delta_Pch,Pdis==Pdis_DA+delta_Pdis];%µçÁ¿Ô¼Êø
-%Ä¿±êº¯Êı
+    0==S(96)+lastS(Set_CS_bid),Pch==Pch_DA+delta_Pch,Pdis==Pdis_DA+delta_Pdis];%ç”µé‡çº¦æŸ
+%ç›®æ ‡å‡½æ•°
 Obj=0.25*sum(sum((ones(4,1)*Price_G_DA(l+1:96)).*(delta_Pch(:,l+1:96)-delta_Pdis(:,l+1:96))))+0.25*Price_G_DA(l)*delta_Pg+0.25*price_balance*Beta-1E5*Lagrant_G_left+1E5*Lagrant_G_right+sum(Lagrant_L_left.*(Pf_limit+Pf_DA(:,l)))+sum(Lagrant_L_right.*(Pf_limit-Pf_DA(:,l)))-Lagrant_G*sum(delta_Pch(Set_CS_nobid,l)-delta_Pdis(Set_CS_nobid,l));
-%Ô¼ÊøÌõ¼ş
+%çº¦æŸæ¡ä»¶
 Constraints=[Ckkt,Cpri];
-%Çó½âÄ£ĞÍ
+%æ±‚è§£æ¨¡å‹
 ops=sdpsettings('solver','gurobi','gurobi.OptimalityTol',1e-8,'gurobi.FeasibilityTol',1e-8,'gurobi.IntFeasTol',1e-8);
 ops.gurobi.MIPGap=1e-8;
 solvesdp(Constraints,Obj,ops);
-%µÃµ½±äÁ¿
+%å¾—åˆ°å˜é‡
 result_RT_single.Pch=double(Pch);
 result_RT_single.Pdis=double(Pdis);
 result_RT_single.delta_Pch=double(delta_Pch);
